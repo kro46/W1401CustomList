@@ -1,22 +1,27 @@
 package kr.ac.kumoh.s20170187com.example.w1401customlist
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.android.volley.toolbox.NetworkImageView
 import kr.ac.kumoh.s20170187com.example.w1401customlist.databinding.ActivityMainBinding
+import android.view.View.OnClickListener
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var model: SongViewModel
     private val songAdapter = SongAdapter()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -43,18 +48,37 @@ class MainActivity : AppCompatActivity() {
 
         model.requestSong()
     }
+
     inner class SongAdapter: RecyclerView.Adapter<SongAdapter.ViewHolder>() {
-        inner class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
+        //inner class ViewHolder(itemView: View): RecyclerView.ViewHolder(itemView) {
+        inner class ViewHolder(itemView: View)
+            : RecyclerView.ViewHolder(itemView), OnClickListener {
+
             val txTitle: TextView = itemView.findViewById(R.id.text1)
             val txSinger: TextView = itemView.findViewById(R.id.text2)
-            val netImage: NetworkImageView = itemView.findViewById(R.id.image)
+
+            val niImage: NetworkImageView = itemView.findViewById<NetworkImageView>(R.id.image)
 
             init {
-                netImage.setDefaultImageResId(android.R.drawable.ic_menu_report_image)
+                niImage.setDefaultImageResId(android.R.drawable.ic_menu_report_image)
+                itemView.setOnClickListener(this)
+            }
+
+            override fun onClick(p0: View?) {
+//                Toast.makeText(application,
+//                    model.list.value?.get(adapterPosition)?.title,
+//                    Toast.LENGTH_SHORT).show()
+                val intent = Intent(application, SongActivity::class.java)
+                val song = model.list.value?.get(adapterPosition)
+                intent.putExtra(SongActivity.KEY_TITLE, song?.title)
+                intent.putExtra(SongActivity.KEY_SINGER, song?.singer)
+                intent.putExtra(SongActivity.KEY_IMAGE, model.getImageUrl(adapterPosition))
+                startActivity(intent)
             }
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            //val view = layoutInflater.inflate(android.R.layout.simple_list_item_2,
             val view = layoutInflater.inflate(R.layout.item_song,
                 parent,
                 false)
@@ -64,9 +88,9 @@ class MainActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             holder.txTitle.text = model.list.value?.get(position)?.title
             holder.txSinger.text = model.list.value?.get(position)?.singer
-            holder.netImage.setImageUrl(model.getImageUrl(position),model.imageLoader)
-        }
 
+            holder.niImage.setImageUrl(model.getImageUrl(position), model.imageLoader)
+        }
         override fun getItemCount() = model.list.value?.size ?: 0
     }
 }
